@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ちびリュー">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#9fd77a">
+<title>ちびリューのまち</title>
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/addons/" } }</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#3b2d3a;--card:#fffaf0;--line:#3b2d3a;--org:#eba24c;--pink:#ff8fb1;--blue:#5ec8c9}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#9fd77a;color:var(--ink);font-family:"M PLUS Rounded 1c",system-ui,sans-serif;user-select:none;-webkit-user-select:none;touch-action:none}
+canvas#c,canvas#fx{position:fixed;inset:0;width:100%;height:100%;display:block}
+canvas#fx{pointer-events:none;z-index:1}
+button{font:inherit;color:inherit;cursor:pointer}
+.card{background:var(--card);border:3px solid var(--line);border-radius:18px;box-shadow:0 4px 0 rgba(59,45,58,.35)}
+#hud{position:fixed;left:max(10px,env(safe-area-inset-left));top:max(10px,env(safe-area-inset-top));padding:8px 12px 9px;min-width:188px;font-size:13px;line-height:1.35;z-index:5}
+#hud .nm{font-weight:800;font-size:16px;display:flex;align-items:center;gap:6px}
+#hud .nm small{font-size:11px;background:var(--org);color:#fff;border-radius:99px;padding:1px 8px;font-weight:700}
+#hud .tm{font-size:12px;opacity:.85;margin-bottom:3px}
+.bar{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;margin-top:3px}
+.bar i{font-style:normal;width:16px;text-align:center}
+.bar b{flex:1;height:9px;border:2px solid var(--line);border-radius:9px;overflow:hidden;background:#fff;min-width:110px}
+.bar b u{display:block;height:100%;width:50%;transition:width .4s}
+#topR{position:fixed;right:max(10px,env(safe-area-inset-right));top:max(10px,env(safe-area-inset-top));display:flex;gap:6px;z-index:5}
+.rb{height:40px;min-width:40px;padding:0 10px;border:3px solid var(--line);border-radius:14px;background:var(--card);font-weight:800;font-size:13px;box-shadow:0 3px 0 rgba(59,45,58,.35)}
+.rb:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(59,45,58,.35)}
+#zone{position:fixed;left:50%;top:max(14px,env(safe-area-inset-top));transform:translate(-50%,-80px);transition:transform .5s;padding:6px 18px;font-weight:800;font-size:15px;z-index:4;white-space:nowrap}
+#zone.show{transform:translate(-50%,0)}
+#bottom{position:fixed;left:0;right:0;bottom:max(12px,env(safe-area-inset-bottom));display:flex;justify-content:center;gap:8px;z-index:5;pointer-events:none;padding:0 10px}
+#bottom button{pointer-events:auto}
+.bb{height:52px;padding:0 14px;border:3px solid var(--line);border-radius:16px;background:var(--card);font-weight:800;font-size:14px;box-shadow:0 4px 0 rgba(59,45,58,.35);display:flex;align-items:center;gap:5px}
+.bb:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(59,45,58,.35)}
+.bb span{font-size:20px}
+#act{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:calc(max(12px,env(safe-area-inset-bottom)) + 66px);height:64px;min-width:64px;padding:0 18px;border-radius:32px;background:var(--org);color:#fff;border:3px solid var(--line);font-weight:800;font-size:16px;box-shadow:0 5px 0 rgba(59,45,58,.4);z-index:6;display:none;text-shadow:0 2px 0 rgba(0,0,0,.2)}
+#act.show{display:block;animation:pop .25s}
+@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.08)}100%{transform:scale(1)}}
+#toast{position:fixed;left:50%;bottom:calc(max(12px,env(safe-area-inset-bottom)) + 76px);transform:translateX(-50%);padding:8px 16px;font-weight:700;font-size:14px;z-index:7;opacity:0;transition:opacity .3s;pointer-events:none;max-width:88vw;text-align:center}
+#toast.show{opacity:1}
+/* はなしかけ */
+#talk{position:fixed;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translate(-50%,130%);transition:transform .3s cubic-bezier(.3,1.3,.5,1);width:min(620px,calc(100vw - 20px));padding:12px 14px 12px;z-index:10;display:flex;gap:12px}
+#talk.show{transform:translate(-50%,0)}
+#talk .face{width:96px;height:96px;flex:none;border-radius:16px;background:#e9f6df;border:3px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden}
+#talk .face img{width:92px;height:92px}
+#talk .face.hop img{animation:hop .45s}
+@keyframes hop{0%,100%{transform:translateY(0)}40%{transform:translateY(-12px) scale(1.05,.95)}}
+#talk .bd{flex:1;min-width:0}
+#talk .who{font-weight:800;font-size:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#talk .hearts{font-size:14px;letter-spacing:1px}
+#talk .txt{margin:4px 0 8px;font-size:14px;line-height:1.55;min-height:44px;white-space:pre-line}
+#talk .btns{display:flex;flex-wrap:wrap;gap:6px}
+.tb{padding:7px 11px;border:2.5px solid var(--line);border-radius:12px;background:#fff;font-weight:800;font-size:13px;box-shadow:0 3px 0 rgba(59,45,58,.3)}
+.tb:active{transform:translateY(2px);box-shadow:none}
+.tb.main{background:var(--org);color:#fff}
+.tb.pink{background:var(--pink);color:#fff}
+.tb:disabled{opacity:.45}
+/* モーダル */
+#modal{position:fixed;inset:0;background:rgba(40,30,50,.35);z-index:20;display:none;align-items:center;justify-content:center;padding:14px}
+#modal.show{display:flex}
+#modal .card{width:min(560px,100%);max-height:86vh;overflow:auto;padding:16px 16px 14px}
+#modal h2{margin:0 0 10px;font-size:19px;display:flex;justify-content:space-between;align-items:center}
+#modal h2 button{border:2.5px solid var(--line);background:#fff;border-radius:10px;width:34px;height:34px;font-weight:800}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.cell{border:2.5px solid var(--line);border-radius:14px;background:#fff;padding:6px;text-align:center;font-size:12px;font-weight:700;position:relative}
+.cell img{width:84px;height:84px;display:block;margin:0 auto}
+.cell.unk img{filter:brightness(0) opacity(.25)}
+.cell .no{position:absolute;left:6px;top:4px;font-size:10px;opacity:.6}
+.cell .hint{font-weight:500;font-size:10.5px;opacity:.75;margin-top:2px;line-height:1.35}
+.cell button{margin-top:4px}
+.cell.walk{background:#fff4dc}
+.berry{display:flex;align-items:center;gap:10px;border:2.5px solid var(--line);border-radius:14px;background:#fff;padding:8px 10px;margin-bottom:7px}
+.berry .dot{width:30px;height:30px;border-radius:50%;border:2.5px solid var(--line);flex:none;box-shadow:inset -4px -4px 0 rgba(0,0,0,.12)}
+.berry .info{flex:1;font-size:12px}
+.berry .info b{font-size:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.lbl{font-size:12px;opacity:.75;margin-top:10px}
+input.nm{font:inherit;font-size:20px;font-weight:800;padding:8px 12px;border:3px solid var(--line);border-radius:12px;width:100%;text-align:center}
+#fade{position:fixed;inset:0;background:#1d1a2e;opacity:0;pointer-events:none;transition:opacity .6s;z-index:30;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px}
+#fade.on{opacity:1;pointer-events:auto}
+#loading{position:fixed;inset:0;background:#9fd77a;z-index:40;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px}
+@media (max-width:560px){
+  #hud{min-width:0;padding:6px 9px 7px;font-size:11px}
+  #hud .nm{font-size:14px}
+  .bar b{min-width:72px;height:8px}
+  .bb{height:46px;padding:0 10px;font-size:12px}
+  .bb span{font-size:18px}
+  .rb{height:36px;min-width:36px;padding:0 8px;font-size:12px}
+  #talk .face{width:72px;height:72px}#talk .face img{width:68px;height:68px}
+  #talk .txt{font-size:13px}
+  .tb{padding:6px 9px;font-size:12px}
+  #zone{top:calc(max(10px,env(safe-area-inset-top)) + 112px);font-size:13px;padding:5px 14px}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<canvas id="fx"></canvas>
+<div id="hud" class="card">
+  <div class="nm"><span id="hName">リュー</span><small id="hStage">たまご</small></div>
+  <div class="tm" id="hTime">1にちめ 7:00 ☀️</div>
+  <div class="bar"><i>🍓</i><b><u id="mFood" style="background:#ff8fb1"></u></b></div>
+  <div class="bar"><i>⚡</i><b><u id="mEnergy" style="background:#ffd34d"></u></b></div>
+  <div class="bar"><i>💗</i><b><u id="mLove" style="background:#ff6b8a"></u></b></div>
+</div>
+<div id="topR">
+  <button class="rb" id="bSpeed">⏩ ふつう</button>
+  <button class="rb" id="bSound">🔊</button>
+  <button class="rb" id="bSet">⚙</button>
+</div>
+<div id="zone" class="card"></div>
+<div id="bottom">
+  <button class="bb" id="bBag"><span>🎒</span>バッグ</button>
+  <button class="bb" id="bSing"><span>🎵</span>うたう</button>
+  <button class="bb" id="bDex"><span>📖</span>てちょう</button>
+</div>
+<button id="act"></button>
+<div id="toast" class="card"></div>
+<div id="talk" class="card">
+  <div class="face" id="tFace"><img id="tImg" alt=""></div>
+  <div class="bd">
+    <div class="who"><span id="tName"></span><span class="hearts" id="tHearts"></span></div>
+    <div class="txt" id="tText"></div>
+    <div class="btns" id="tBtns"></div>
+  </div>
+</div>
+<div id="modal"><div class="card" id="mBody"></div></div>
+<div id="fade"></div>
+<div id="loading">まちを つくっています…</div>
+<script src="js/data.js"></script>
+<script src="js/art.js"></script>
+<script src="js/map.js"></script>
+<script src="js/audio.js"></script>
+<script type="module" src="js/main.js"></script>
+<script>if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+// 2本指で拡大させない（ダブルタップ拡大は touch-action:none で止めている）
+document.addEventListener('gesturestart', e => e.preventDefault());</script>
+</body>
+</html>
